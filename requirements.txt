@@ -2,14 +2,14 @@
 fastapi==0.111.0
 uvicorn[standard]==0.29.0
 
-# YouTube transcript (0.6.3+ uses object-style segments, handled in transcript_service.py)
+# YouTube transcript — works with v0.6.x AND v1.x
 youtube-transcript-api>=0.6.2
 
 # Embeddings
 sentence-transformers==2.7.0
 
-# Vector store
-faiss-cpu==1.12.0
+# Vector store — use whatever version installs on your machine
+faiss-cpu>=1.8.0
 
 # Google Gemini LLM
 google-generativeai==0.7.2

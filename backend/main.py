@@ -114,6 +114,21 @@ def delete_video(video_id: str):
     return DeleteResponse(success=True, message=f"Video '{video_id}' removed successfully.")
 
 
+# ── Debug endpoint ────────────────────────────────────────────────────────────
+@app.get("/debug/transcript-api", tags=["System"])
+def debug_transcript_api():
+    """Shows installed youtube-transcript-api version and available methods — helps diagnose issues."""
+    try:
+        import youtube_transcript_api as _yta
+        from youtube_transcript_api import YouTubeTranscriptApi
+        return {
+            "version": getattr(_yta, "__version__", "unknown"),
+            "available_methods": [m for m in dir(YouTubeTranscriptApi) if not m.startswith("_")],
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+
 # ── Dev entrypoint ─────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     import uvicorn
