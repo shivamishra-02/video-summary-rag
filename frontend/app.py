@@ -268,10 +268,41 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("""
-<small style="color:#555">
-Built with FastAPI + FAISS + Gemini<br/>
-Embeddings: all-MiniLM-L6-v2
-</small>
+<div style="
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    border: 1px solid #2a2a3e;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-top: 4px;
+">
+    <div style="font-size:0.7rem; color:#555; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">
+        &#9881; Built by
+    </div>
+    <div style="font-weight:700; font-size:1rem; color:#e0e0e0; margin-bottom:8px;">
+        Shivam Mishra
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
+        <a href="https://github.com/shivamishra-02" target="_blank"
+           style="display:inline-flex; align-items:center; gap:5px;
+                  background:#1e1e1e; color:#c0c0c0; text-decoration:none;
+                  padding:4px 10px; border-radius:20px; font-size:0.75rem;
+                  border:1px solid #333;">
+            &#128201; shivamishra-02
+        </a>
+        <a href="https://www.linkedin.com/in/shivam-mishra-3a741b253/" target="_blank"
+           style="display:inline-flex; align-items:center; gap:5px;
+                  background:#1e1e1e; color:#0a8bc0; text-decoration:none;
+                  padding:4px 10px; border-radius:20px; font-size:0.75rem;
+                  border:1px solid #0a3a50;">
+            &#128279; LinkedIn
+        </a>
+    </div>
+    <div style="padding-top:8px; border-top:1px solid #222;
+                font-size:0.68rem; color:#444; line-height:1.5;">
+        FastAPI &middot; FAISS &middot; Gemini 2.0 Flash<br/>
+        Embeddings: all-MiniLM-L6-v2
+    </div>
+</div>
 """, unsafe_allow_html=True)
 
 

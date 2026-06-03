@@ -12,7 +12,7 @@ Ask questions about **any YouTube video** using its transcript as a knowledge ba
 - 📝 **Auto transcript** — no YouTube API key needed
 - 🧠 **Local embeddings** — `all-MiniLM-L6-v2` runs on your machine
 - ⚡ **FAISS vector search** — millisecond similarity search
-- 🤖 **Gemini 1.5 Flash** — free-tier LLM, grounded strictly in transcript
+- 🤖 **Gemini 2.0 Flash** — free-tier LLM, grounded strictly in transcript
 - 🛡️ **Out-of-scope detection** — two-layer guard (distance threshold + LLM prompt)
 - 🎨 **Streamlit UI** — dark-themed chat interface
 - 📡 **REST API** — FastAPI backend with full OpenAPI docs
