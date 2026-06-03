@@ -81,7 +81,7 @@ video-summary-rag/
 ### 1. Clone & setup
 
 ```bash
-git clone https://github.com/your-username/video-summary-rag
+git clone https://github.com/shivamishra-02/video-summary-rag
 cd video-summary-rag
 
 python -m venv venv
