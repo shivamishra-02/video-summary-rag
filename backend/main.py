@@ -117,14 +117,23 @@ def delete_video(video_id: str):
 # ── Debug endpoint ────────────────────────────────────────────────────────────
 @app.get("/debug/transcript-api", tags=["System"])
 def debug_transcript_api():
-    """Shows installed youtube-transcript-api version and available methods — helps diagnose issues."""
+    """Shows installed youtube-transcript-api version, methods, and signatures."""
     try:
+        import inspect, importlib.metadata
         import youtube_transcript_api as _yta
         from youtube_transcript_api import YouTubeTranscriptApi
-        return {
-            "version": getattr(_yta, "__version__", "unknown"),
-            "available_methods": [m for m in dir(YouTubeTranscriptApi) if not m.startswith("_")],
-        }
+        try:
+            version = importlib.metadata.version("youtube-transcript-api")
+        except Exception:
+            version = getattr(_yta, "__version__", "unknown")
+        methods = {}
+        for m in dir(YouTubeTranscriptApi):
+            if not m.startswith("_"):
+                try:
+                    methods[m] = str(inspect.signature(getattr(YouTubeTranscriptApi, m)))
+                except Exception:
+                    methods[m] = "signature unavailable"
+        return {"version": version, "methods": methods}
     except Exception as e:
         return {"error": str(e)}
 
