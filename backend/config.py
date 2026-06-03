@@ -11,7 +11,7 @@ load_dotenv()
 
 # ── Gemini ────────────────────────────────────────────────────────────────────
 GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
-GEMINI_MODEL: str = "gemini-1.5-flash"          # free-tier model
+GEMINI_MODEL: str = "gemini-2.0-flash"          # free-tier model
 
 # ── Embeddings ────────────────────────────────────────────────────────────────
 EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2")
