@@ -6,9 +6,9 @@
 
 Powered by **Google Gemini 2.0 Flash** · **FAISS** · **Sentence Transformers** · **FastAPI** · **Streamlit**
 
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://video-summary-rag-v9sak4juxoznuwfwjxyyh7.streamlit.app)
-
-[🚀 Live Demo](https://video-summary-rag-v9sak4juxoznuwfwjxyyh7.streamlit.app) · [📡 API Docs](https://web-production-39b1e.up.railway.app/docs) · [🔧 Backend Health](https://web-production-39b1e.up.railway.app/health)
+[![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-Streamlit-FF4B4B?style=for-the-badge)](https://video-summary-rag-v9sak4juxoznuwfwjxyyh7.streamlit.app)
+[![API Docs](https://img.shields.io/badge/📡_API_Docs-Railway-0B0D0E?style=for-the-badge)](https://web-production-39b1e.up.railway.app/docs)
+[![Backend](https://img.shields.io/badge/🔧_Backend-Health-22c55e?style=for-the-badge)](https://web-production-39b1e.up.railway.app/health)
 
 </div>
 
