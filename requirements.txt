@@ -1,10 +1,10 @@
-# YouTube transcript
+# YouTube transcript (v0.6.x — Python 3.14 compatible)
 youtube-transcript-api>=0.6.2,<1.0.0
 
 # Embeddings
 sentence-transformers==2.7.0
 
-# Vector store — latest version for Python 3.14
+# Vector store
 faiss-cpu>=1.12.0
 
 # Google Gemini LLM
@@ -15,9 +15,12 @@ langchain-text-splitters==0.2.1
 
 # Utilities
 python-dotenv==1.0.1
-pydantic==2.7.1
+pydantic==2.11.5
 requests==2.31.0
 httpx==0.27.0
 
+# Pillow — pre-built wheel
+Pillow==11.2.1
+
 # Frontend
-streamlit==1.35.0
+streamlit==1.45.1
