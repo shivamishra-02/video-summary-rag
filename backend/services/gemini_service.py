@@ -1,19 +1,11 @@
 """
-gemini_service.py — Wraps the Google Gemini API (gemini-1.5-flash).
-
-Builds a grounded prompt from retrieved chunks and the user query,
-then returns the model's answer as a plain string.
+gemini_service.py — Wraps Google Gemini API (gemini-2.0-flash).
+API key is validated at request time, not at import/startup.
 """
 
 import google.generativeai as genai
 from backend.config import GEMINI_API_KEY, GEMINI_MODEL
 
-# Configure once at import time
-genai.configure(api_key=GEMINI_API_KEY)
-
-_model = genai.GenerativeModel(GEMINI_MODEL)
-
-# ── System prompt ─────────────────────────────────────────────────────────────
 _SYSTEM_PROMPT = """\
 You are a helpful assistant that answers questions STRICTLY based on the \
 provided video transcript excerpts.
@@ -28,20 +20,19 @@ Rules you MUST follow:
 
 
 def generate_answer(query: str, context_chunks: list[str]) -> str:
-    """
-    Ask Gemini to answer the query using only the provided context chunks.
-
-    Args:
-        query:          The user's question.
-        context_chunks: List of relevant transcript chunks retrieved via FAISS.
-
-    Returns:
-        The model's answer as a string.
-    """
     if not context_chunks:
         return "I'm sorry, I couldn't find information about that in this video."
 
-    # Build numbered context block
+    # Validate key at request time — not at startup
+    api_key = GEMINI_API_KEY
+    if not api_key:
+        raise RuntimeError(
+            "GEMINI_API_KEY is not set. Add it in Railway → Variables."
+        )
+
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel(GEMINI_MODEL)
+
     context_block = "\n\n".join(
         f"[Excerpt {i + 1}]:\n{chunk}" for i, chunk in enumerate(context_chunks)
     )
@@ -57,7 +48,7 @@ Question: {query}
 Answer:"""
 
     try:
-        response = _model.generate_content(full_prompt)
+        response = model.generate_content(full_prompt)
         return response.text.strip()
     except Exception as e:
         raise RuntimeError(f"Gemini API error: {e}") from e
