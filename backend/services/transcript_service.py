@@ -1,9 +1,9 @@
 """
 transcript_service.py
 
-youtube-transcript-api v1.2.4
-fetch() and list() are INSTANCE methods, not class methods.
-Usage: YouTubeTranscriptApi().fetch(video_id, languages=[...])
+Supports BOTH versions automatically:
+  v0.6.x (Python 3.14 / Streamlit Cloud): get_transcript(), list_transcripts()
+  v1.x   (local dev):                     api.fetch(), api.list()  [instance methods]
 """
 
 import requests as _requests
@@ -18,17 +18,31 @@ class TranscriptResult:
         self.title = title
 
 
-def _to_text(fetched) -> str:
+def _to_text(segments) -> str:
     parts = []
-    for snippet in fetched:
-        if isinstance(snippet, dict):
-            t = snippet.get("text", "")
+    for s in segments:
+        if isinstance(s, dict):
+            t = s.get("text", "")
         else:
-            t = getattr(snippet, "text", "") or str(snippet)
+            t = getattr(s, "text", None) or getattr(s, "content", None) or str(s)
         t = t.strip()
         if t:
             parts.append(t)
     return " ".join(parts).replace("\n", " ").strip()
+
+
+def _has_instance_methods() -> bool:
+    """v1.x uses instance methods (self), v0.x uses class methods."""
+    try:
+        import inspect
+        from youtube_transcript_api import YouTubeTranscriptApi
+        fetch = getattr(YouTubeTranscriptApi, "fetch", None)
+        if fetch is None:
+            return False
+        sig = str(inspect.signature(fetch))
+        return sig.startswith("(self")
+    except Exception:
+        return False
 
 
 def fetch_transcript(url: str, preferred_language: str = "en") -> TranscriptResult:
@@ -41,67 +55,69 @@ def fetch_transcript(url: str, preferred_language: str = "en") -> TranscriptResu
     except ImportError:
         raise RuntimeError("Run: pip install youtube-transcript-api")
 
-    # v1.2.4: instance methods — create ONE instance and reuse
-    api = YouTubeTranscriptApi()
     last_error = None
 
-    # ── Strategy 1: fetch() with language preferences ─────────────────────────
-    for lang_list in [
-        [preferred_language],
-        ["en"],
-        ["hi"],
-        ["en-US"],
-        ["en-GB"],
-    ]:
+    # ── v1.x path: instance methods ──────────────────────────────────────────
+    if _has_instance_methods():
+        api = YouTubeTranscriptApi()
+
+        for kwargs in [{"languages": [preferred_language]}, {"languages": ["en"]},
+                       {"languages": ["hi"]}, {}]:
+            try:
+                fetched = api.fetch(video_id, **kwargs)
+                text = _to_text(fetched)
+                if text:
+                    lang = kwargs.get("languages", ["auto"])[0] if kwargs else "auto"
+                    return TranscriptResult(video_id=video_id, text=text,
+                                            language=lang, title=_get_video_title(video_id))
+            except Exception as e:
+                last_error = e
+
         try:
-            fetched = api.fetch(video_id, languages=lang_list)
-            text = _to_text(fetched)
-            if text:
-                return TranscriptResult(
-                    video_id=video_id, text=text,
-                    language=lang_list[0],
-                    title=_get_video_title(video_id),
-                )
+            for transcript in api.list(video_id):
+                try:
+                    text = _to_text(transcript.fetch())
+                    if text:
+                        lang = getattr(transcript, "language_code", "unknown")
+                        return TranscriptResult(video_id=video_id, text=text,
+                                                language=lang, title=_get_video_title(video_id))
+                except Exception as e:
+                    last_error = e
         except Exception as e:
             last_error = e
 
-    # ── Strategy 2: fetch() with default language (library picks) ────────────
-    try:
-        fetched = api.fetch(video_id)
-        text = _to_text(fetched)
-        if text:
-            return TranscriptResult(
-                video_id=video_id, text=text,
-                language="auto",
-                title=_get_video_title(video_id),
-            )
-    except Exception as e:
-        last_error = e
-
-    # ── Strategy 3: list() → iterate every available transcript ──────────────
-    try:
-        transcript_list = api.list(video_id)
-        for transcript in transcript_list:
+    # ── v0.x path: class methods ──────────────────────────────────────────────
+    else:
+        # Strategy 1: get_transcript() direct call
+        for lang_args in [{"languages": [preferred_language]}, {"languages": ["en"]},
+                          {"languages": ["hi"]}, {}]:
             try:
-                fetched = transcript.fetch()
-                text = _to_text(fetched)
+                segments = YouTubeTranscriptApi.get_transcript(video_id, **lang_args)
+                text = _to_text(segments)
                 if text:
-                    lang = getattr(transcript, "language_code",
-                           getattr(transcript, "language", "unknown"))
-                    return TranscriptResult(
-                        video_id=video_id, text=text,
-                        language=lang,
-                        title=_get_video_title(video_id),
-                    )
+                    lang = lang_args.get("languages", ["auto"])[0] if lang_args else "auto"
+                    return TranscriptResult(video_id=video_id, text=text,
+                                            language=lang, title=_get_video_title(video_id))
             except Exception as e:
                 last_error = e
-                continue
-    except Exception as e:
-        last_error = e
+
+        # Strategy 2: list_transcripts() fallback
+        try:
+            tlist = YouTubeTranscriptApi.list_transcripts(video_id)
+            for transcript in tlist:
+                try:
+                    text = _to_text(transcript.fetch())
+                    if text:
+                        lang = getattr(transcript, "language_code", "unknown")
+                        return TranscriptResult(video_id=video_id, text=text,
+                                                language=lang, title=_get_video_title(video_id))
+                except Exception as e:
+                    last_error = e
+        except Exception as e:
+            last_error = e
 
     raise ValueError(
-        f"Could not fetch transcript for '{video_id}'. "
-        f"Last error: {last_error}"
+        f"Could not fetch transcript for '{video_id}'. Last error: {last_error}"
     )
 
 
