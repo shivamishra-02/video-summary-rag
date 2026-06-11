@@ -2,15 +2,38 @@
 frontend/app.py — Streamlit UI for Video Transcript RAG Assistant.
 
 Run with:  streamlit run frontend/app.py
-Requires the FastAPI backend to be running at http://localhost:8000
+
+Backend URL priority:
+  1. st.secrets["BACKEND_URL"]  ← set this on Streamlit Cloud
+  2. BACKEND_URL env var         ← for local .env usage
+  3. http://localhost:8000       ← local dev fallback
 """
 
+import os
 import streamlit as st
 import requests
 from urllib.parse import urlparse, parse_qs
 import re
+from dotenv import load_dotenv
 
-BACKEND_URL = "http://localhost:8000"
+load_dotenv()
+
+def _get_backend_url() -> str:
+    # 1. Streamlit Cloud secrets
+    try:
+        url = st.secrets.get("BACKEND_URL", "")
+        if url:
+            return url.rstrip("/")
+    except Exception:
+        pass
+    # 2. Environment variable
+    url = os.getenv("BACKEND_URL", "")
+    if url:
+        return url.rstrip("/")
+    # 3. Local fallback
+    return "http://localhost:8000"
+
+BACKEND_URL = _get_backend_url()
 
 
 # ── Page config ────────────────────────────────────────────────────────────────
