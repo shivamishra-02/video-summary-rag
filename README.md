@@ -1,21 +1,29 @@
+<div align="center">
+
 # 🎥 Video Transcript RAG Assistant
 
-Ask questions about **any YouTube video** using its transcript as a knowledge base — powered by **Google Gemini**, **FAISS**, and **Sentence Transformers**.
+**Ask questions about any YouTube video using its transcript as a knowledge base.**
 
-> If the answer isn't in the video, the assistant says so — no hallucinations.
+Powered by **Google Gemini 2.0 Flash** · **FAISS** · **Sentence Transformers** · **FastAPI** · **Streamlit**
+
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://video-summary-rag-v9sak4juxoznuwfwjxyyh7.streamlit.app)
+
+[🚀 Live Demo](https://video-summary-rag-v9sak4juxoznuwfwjxyyh7.streamlit.app) · [📡 API Docs](https://web-production-39b1e.up.railway.app/docs) · [🔧 Backend Health](https://web-production-39b1e.up.railway.app/health)
+
+</div>
 
 ---
 
 ## ✨ Features
 
 - 🔗 **Any YouTube URL** — watch, shorts, youtu.be links all supported
-- 📝 **Auto transcript** — no YouTube API key needed
-- 🧠 **Local embeddings** — `all-MiniLM-L6-v2` runs on your machine
+- 📝 **Auto transcript fetch** — no YouTube Data API key needed
+- 🧠 **Local embeddings** — `all-MiniLM-L6-v2` via Sentence Transformers
 - ⚡ **FAISS vector search** — millisecond similarity search
 - 🤖 **Gemini 2.0 Flash** — free-tier LLM, grounded strictly in transcript
-- 🛡️ **Out-of-scope detection** — two-layer guard (distance threshold + LLM prompt)
-- 🎨 **Streamlit UI** — dark-themed chat interface
-- 📡 **REST API** — FastAPI backend with full OpenAPI docs
+- 🛡️ **Two-layer out-of-scope detection** — FAISS distance threshold + LLM prompt guard
+- 🎨 **Dark-themed Streamlit UI** — chat interface with source chunk viewer
+- 📡 **REST API** — FastAPI backend with full OpenAPI/Swagger docs
 
 ---
 
@@ -25,22 +33,22 @@ Ask questions about **any YouTube video** using its transcript as a knowledge ba
 YouTube URL
     │
     ▼
-transcript_service.py   ← youtube-transcript-api (no key needed)
+transcript_service.py   ←  youtube-transcript-api  (no API key needed)
     │
     ▼
-chunking_service.py     ← RecursiveCharacterTextSplitter (500 chars, 50 overlap)
+chunking_service.py     ←  RecursiveCharacterTextSplitter (500 chars, 50 overlap)
     │
     ▼
-embedding_service.py    ← SentenceTransformer (all-MiniLM-L6-v2, local)
+embedding_service.py    ←  SentenceTransformer: all-MiniLM-L6-v2  (runs locally)
     │
     ▼
-vector_store.py         ← FAISS IndexFlatL2 (in-memory, per-video)
+vector_store.py         ←  FAISS IndexFlatL2  (in-memory, per-video)
     │
-    ▼  ← query embedding + similarity search
-gemini_service.py       ← Gemini 1.5 Flash (grounded prompt)
+    ▼  query embedding + similarity search (top-k chunks)
+gemini_service.py       ←  Gemini 2.0 Flash  (grounded prompt)
     │
     ▼
-Answer ✅  or  "Not in this video" ❌
+Answer ✅   or   "Not in this video" ❌
 ```
 
 ---
@@ -49,34 +57,43 @@ Answer ✅  or  "Not in this video" ❌
 
 ```
 video-summary-rag/
+│
 ├── backend/
-│   ├── main.py                  # FastAPI app + all endpoints
-│   ├── config.py                # Environment variables
+│   ├── main.py                    # FastAPI app + all endpoints
+│   ├── config.py                  # Environment variables & constants
 │   ├── models/
-│   │   └── schemas.py           # Pydantic request/response models
+│   │   └── schemas.py             # Pydantic request/response models
 │   ├── services/
-│   │   ├── transcript_service.py  # YouTube → raw transcript
-│   │   ├── chunking_service.py    # Text → chunks
-│   │   ├── embedding_service.py   # Chunks → vectors
-│   │   ├── vector_store.py        # FAISS index management
-│   │   ├── gemini_service.py      # Gemini API wrapper
-│   │   └── rag_service.py         # Pipeline orchestrator
+│   │   ├── transcript_service.py  # YouTube URL → raw transcript text
+│   │   ├── chunking_service.py    # Text → overlapping chunks
+│   │   ├── embedding_service.py   # Chunks → float32 vectors
+│   │   ├── vector_store.py        # FAISS index (add / search / delete)
+│   │   ├── gemini_service.py      # Gemini 2.0 Flash API wrapper
+│   │   └── rag_service.py         # End-to-end pipeline orchestrator
 │   └── utils/
-│       └── youtube_utils.py       # URL parsing helpers
+│       └── youtube_utils.py       # URL parsing & video ID extraction
+│
 ├── frontend/
-│   └── app.py                   # Streamlit UI
+│   └── app.py                     # Streamlit chat UI
+│
 ├── tests/
 │   ├── test_transcript.py
 │   ├── test_rag.py
 │   └── test_api.py
-├── .env.example
-├── requirements.txt
+│
+├── .streamlit/
+│   └── config.toml                # Streamlit dark theme config
+│
+├── requirements.txt               # Streamlit Cloud dependencies
+├── requirements-backend.txt       # Railway backend dependencies
+├── railway.json                   # Railway deploy config
+├── .env.example                   # Environment variable template
 └── README.md
 ```
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Quick Start (Local)
 
 ### 1. Clone & setup
 
@@ -87,37 +104,33 @@ cd video-summary-rag
 python -m venv venv
 source venv/bin/activate        # Windows: venv\Scripts\activate
 
-pip install -r requirements.txt
+pip install -r requirements-backend.txt
 ```
 
-### 2. Add your Gemini API key
+### 2. Add environment variables
 
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` and set:
-```
-GEMINI_API_KEY=your_key_here
+Edit `.env`:
+```env
+GEMINI_API_KEY=your_key_here   # Get free key: https://aistudio.google.com
 ```
 
-Get a free key at 👉 https://aistudio.google.com
-
-### 3. Run the backend
+### 3. Run backend
 
 ```bash
 uvicorn backend.main:app --reload --port 8000
+# API docs → http://localhost:8000/docs
 ```
 
-API docs available at: http://localhost:8000/docs
-
-### 4. Run the frontend (new terminal)
+### 4. Run frontend (new terminal)
 
 ```bash
 streamlit run frontend/app.py
+# UI → http://localhost:8501
 ```
-
-Opens at: http://localhost:8501
 
 ---
 
@@ -125,68 +138,102 @@ Opens at: http://localhost:8501
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/health` | Server status |
-| `POST` | `/api/load-video` | Index a YouTube video |
-| `POST` | `/api/query` | Ask a question |
-| `GET` | `/api/videos` | List indexed videos |
-| `DELETE` | `/api/videos/{id}` | Remove a video |
+| `GET` | `/health` | Server health + loaded video count |
+| `POST` | `/api/load-video` | Fetch transcript & build FAISS index |
+| `POST` | `/api/query` | Ask a question about an indexed video |
+| `GET` | `/api/videos` | List all currently indexed videos |
+| `DELETE` | `/api/videos/{id}` | Remove a video index from memory |
 
-### Load a video
+### Example — Load a video
 ```bash
-curl -X POST http://localhost:8000/api/load-video \
+curl -X POST https://web-production-39b1e.up.railway.app/api/load-video \
   -H "Content-Type: application/json" \
   -d '{"url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}'
 ```
 
-### Ask a question
+### Example — Ask a question
 ```bash
-curl -X POST http://localhost:8000/api/query \
+curl -X POST https://web-production-39b1e.up.railway.app/api/query \
   -H "Content-Type: application/json" \
   -d '{"video_id": "dQw4w9WgXcQ", "query": "What is this song about?"}'
 ```
 
 ---
 
-## 🧪 Running Tests
+## ☁️ Deployment
 
-```bash
-# All tests (no API calls needed)
-pytest tests/ -v
+| Service | Platform | URL |
+|---------|----------|-----|
+| 🔧 FastAPI Backend | Railway | https://web-production-39b1e.up.railway.app |
+| 🎨 Streamlit Frontend | Streamlit Cloud | https://video-summary-rag-v9sak4juxoznuwfwjxyyh7.streamlit.app |
 
-# Individual test files
-pytest tests/test_transcript.py -v
-pytest tests/test_rag.py -v
-pytest tests/test_api.py -v
+### Deploy your own
+
+**Backend → Railway:**
+1. Push repo to GitHub
+2. New project on [railway.app](https://railway.app) → Deploy from GitHub
+3. Add env var: `GEMINI_API_KEY`
+4. Railway auto-detects `railway.json` and deploys
+
+**Frontend → Streamlit Cloud:**
+1. Go to [share.streamlit.io](https://share.streamlit.io) → New app
+2. Set main file: `frontend/app.py`, Python: `3.11`
+3. Add secrets:
+```toml
+GEMINI_API_KEY = "your_key"
+BACKEND_URL = "https://your-railway-url.up.railway.app"
 ```
 
 ---
 
 ## ⚙️ Configuration
 
-All settings are in `.env`:
-
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `GEMINI_API_KEY` | — | Required. Get from aistudio.google.com |
-| `EMBEDDING_MODEL` | `all-MiniLM-L6-v2` | Sentence-transformer model |
+| `GEMINI_API_KEY` | — | **Required.** Get free from [aistudio.google.com](https://aistudio.google.com) |
+| `BACKEND_URL` | `http://localhost:8000` | FastAPI backend URL (set on Streamlit Cloud) |
+| `EMBEDDING_MODEL` | `all-MiniLM-L6-v2` | Sentence Transformers model |
 | `CHUNK_SIZE` | `500` | Characters per chunk |
 | `CHUNK_OVERLAP` | `50` | Overlap between chunks |
 | `TOP_K_RESULTS` | `4` | Chunks retrieved per query |
-| `SIMILARITY_THRESHOLD` | `1.2` | L2 distance cutoff for out-of-scope |
+| `SIMILARITY_THRESHOLD` | `1.2` | L2 distance cutoff for out-of-scope detection |
+
+---
+
+## 🧪 Running Tests
+
+```bash
+pytest tests/ -v
+
+# Individual suites
+pytest tests/test_transcript.py -v   # URL parsing & transcript fetch
+pytest tests/test_rag.py -v          # Chunking, embeddings, vector store
+pytest tests/test_api.py -v          # FastAPI endpoints (no real API calls)
+```
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Component | Library |
-|-----------|---------|
-| LLM | `google-generativeai` (Gemini 1.5 Flash) |
-| Embeddings | `sentence-transformers` |
-| Vector DB | `faiss-cpu` |
+| Layer | Technology |
+|-------|-----------|
+| LLM | Google Gemini 2.0 Flash (`google-generativeai`) |
+| Embeddings | `sentence-transformers` — all-MiniLM-L6-v2 |
+| Vector Store | `faiss-cpu` — IndexFlatL2 |
 | Transcript | `youtube-transcript-api` |
 | Backend | `FastAPI` + `uvicorn` |
 | Frontend | `Streamlit` |
-| Text splitting | `langchain-text-splitters` |
+| Text Splitting | `langchain-text-splitters` |
+| Deployment | Railway (backend) + Streamlit Cloud (frontend) |
+
+---
+
+## 👨‍💻 Developer
+
+**Shivam Mishra**
+
+[![GitHub](https://img.shields.io/badge/GitHub-shivamishra--02-181717?style=flat&logo=github)](https://github.com/shivamishra-02)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Shivam%20Mishra-0A66C2?style=flat&logo=linkedin)](https://www.linkedin.com/in/shivam-mishra-3a741b253/)
 
 ---
 
